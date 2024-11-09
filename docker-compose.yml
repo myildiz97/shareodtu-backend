@@ -1,0 +1,17 @@
+version: '3.8' # This specifies the version of the Docker Compose syntax.
+
+# Defines the services for this Docker Compose setup. We have one service called app here.
+services:
+  app:
+    # Build the Docker image from the current directory (where Dockerfile is located)
+    build:
+      # Specifies how to build the Docker image
+      context: . # Points to the directory where Dockerfile is located (in this case, the current directory).
+      dockerfile: Dockerfile # Specifies the name of the Dockerfile to use (Dockerfile in this case).
+    # Specify container name if desired
+    container_name: shareodtu
+    # Map port 8080 on the host to port 8080 in the container
+    ports:
+      - "8080:8080"
+    # Command to start the FastAPI app
+    command: uvicorn main:app --host 0.0.0.0 --port 8080
