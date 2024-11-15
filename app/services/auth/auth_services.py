@@ -9,8 +9,8 @@ import jwt
 from fastapi import HTTPException, status
 
 
-async def authenticate_user(username: str, password: str) -> User:
-    user = await get_user_from_db(username)
+async def authenticate_user(email: str, password: str) -> User:
+    user = await get_user_from_db(email)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -19,7 +19,7 @@ async def authenticate_user(username: str, password: str) -> User:
     if not verify_password(password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
+            detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
     return user

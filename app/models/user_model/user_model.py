@@ -4,7 +4,7 @@ from pydantic import Field, EmailStr, BaseModel
 
 
 class User(Document):
-    username: str = Field(..., example="johndoe")
+    full_name: str = Field(..., example="John Doe")
     email: EmailStr = Field(..., example="johndoe@example.com")
     hashed_password: str = Field(
         ..., example="$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW"
@@ -15,6 +15,6 @@ class User(Document):
 
 
 class CreateUser(BaseModel):
-    username: str = Field(..., example="johndoe")
+    full_name: str = Field(..., example="John Doe")
     email: EmailStr = Field(..., example="johndoe@example.com")
     password: str = Field(..., example="password")

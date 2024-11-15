@@ -24,9 +24,9 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 
-async def get_user_from_db(username: str) -> User | None:
+async def get_user_from_db(email: str) -> User | None:
     try:
-        user = await User.find_one(User.username == username)
+        user = await User.find_one(User.email == email)
         return user
     except Exception as e:
         return {"message": "User not found", "error": str(e)}
@@ -42,13 +42,13 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         payload = jwt.decode(
             token, Settings().SECRET_KEY, algorithms=[Settings().ALGORITHM]
         )
-        username: str = payload.get("sub")
-        if username is None:
+        email: str = payload.get("sub")
+        if email is None:
             raise credentials_exception
-        token_data = TokenData(username=username)
+        token_data = TokenData(email=email)
     except InvalidTokenError:
         raise credentials_exception
-    user = await get_user_from_db(username=token_data.username)
+    user = await get_user_from_db(email=token_data.email)
     if user is None:
         raise credentials_exception
     return user
