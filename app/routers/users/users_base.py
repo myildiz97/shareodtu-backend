@@ -8,6 +8,7 @@ from services.users.user_services import (
 from fastapi import (
     APIRouter,
     Depends,
+    Form,
 )
 
 router = APIRouter(
@@ -24,5 +25,5 @@ async def get_user_me(
 
 
 @router.post("/create")
-async def create_user(form_data: Annotated[CreateUser, Depends()]):
+async def create_user(form_data: Annotated[CreateUser, Form()]):
     return await create_user_service(form_data)

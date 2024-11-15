@@ -1,6 +1,7 @@
 from beanie import Document
 from datetime import datetime
 from pydantic import Field, EmailStr, BaseModel
+from fastapi import Form
 
 
 class User(Document):
@@ -15,6 +16,6 @@ class User(Document):
 
 
 class CreateUser(BaseModel):
-    full_name: str = Field(..., example="John Doe")
-    email: EmailStr = Field(..., example="johndoe@example.com")
-    password: str = Field(..., example="password")
+    full_name: str = Form(..., example="John Doe")
+    email: EmailStr = Form(..., example="johndoe@example.com")
+    password: str = Form(..., example="password")

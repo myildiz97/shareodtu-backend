@@ -2,13 +2,11 @@ from typing import Annotated
 from fastapi.security import OAuth2PasswordRequestForm
 from services.auth.auth_services import authenticate_user, create_access_token
 from config.config import Settings
+from datetime import timedelta
 
 from models.auth_model.auth_model import Token
 
-from fastapi import (
-    APIRouter,
-    Depends,
-)
+from fastapi import APIRouter, Depends
 
 from datetime import timedelta
 
@@ -17,7 +15,7 @@ router = APIRouter(
 )
 
 
-@router.post("/token")
+@router.post("/login")
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ) -> Token:

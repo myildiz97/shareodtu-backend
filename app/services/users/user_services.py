@@ -11,7 +11,7 @@ import jwt
 from jwt.exceptions import InvalidTokenError
 from passlib.context import CryptContext
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -63,6 +63,10 @@ async def get_current_active_user(
 
 
 async def create_user(form_data: Annotated[CreateUser, Form()]):
+    existing_user = await get_user_from_db(form_data.email)
+    if existing_user:
+        return {"message": "User already exists"}
+
     hashed_password = get_password_hash(form_data.password)
     try:
         await User.insert_one(
