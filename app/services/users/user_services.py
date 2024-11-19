@@ -67,11 +67,6 @@ async def create_user(form_data: Annotated[CreateUser, Form()]):
     if existing_user:
         return {"message": "User already exists"}
     
-    
-    existing_username = await get_user_from_db(form_data.full_name)
-    if existing_username:
-        return {"message": "Username already exists"}
-
     hashed_password = get_password_hash(form_data.password)
     try:
         await User.insert_one(
