@@ -20,16 +20,8 @@ class User(Document):
     updated_at: datetime = Field(default_factory=datetime.now)
     user_type: UserType = Field(UserType.DEFAULT.value, example=UserType.DEFAULT.value)
 
-
 class CreateUser(BaseModel):
     full_name: str = Form(..., example="John Doe")
     email: EmailStr = Form(..., example="johndoe@example.com")
     password: str = Form(..., example="password")
     user_type: UserType = Form(..., example=UserType.DEFAULT.value)
-
-
-# class CreateVendor(BaseModel):
-#     full_name: str = Form(..., example="John Doe")
-#     email: EmailStr = Form(..., example="johndoe@example.com")
-#     password: str = Form(..., example="password")
-#     user_type: UserType = Form(UserType.VENDOR.value, example=UserType.VENDOR.value)
