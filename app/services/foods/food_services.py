@@ -19,12 +19,11 @@ async def create_food(food_type: str):
         raise HTTPException(
             status_code=403, detail="Only vendors can create food items"
         )
+    # full name will be the user itself (with the user type of vendor)
     food = Food(food_type=food_type, vendor_name=current_user.full_name)
 
     try:
-        await Food.insert_one(
-            food
-        )
+        await Food.insert_one(food)
         return {"message": "Food created"}
     except Exception as e:
         return {"message": "Food not created", "error": str(e)}
