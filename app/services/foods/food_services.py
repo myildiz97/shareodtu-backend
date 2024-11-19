@@ -19,8 +19,7 @@ async def create_food(food_type: str):
         raise HTTPException(
             status_code=403, detail="Only vendors can create food items"
         )
-
-    food = Food(food_type=food_type, count=0, vendor_name=current_user.full_name)
+    food = Food(food_type=food_type, vendor_name=current_user.full_name)
 
     try:
         await Food.insert_one(
