@@ -12,6 +12,14 @@ async def create_food(food_type: str, current_user: User = Depends(get_current_u
         raise HTTPException(
             status_code=403, detail="Only vendors can create food items"
         )
+    
+    # Check if the food already exists
+    existing_food = await Food.find_one({"food_type": food_type, "vendor.$id": current_user.id})
+    if existing_food:
+        raise HTTPException(
+            status_code=400, detail="Food item already exists"
+        )
+    
     food = Food(food_type=food_type, vendor=current_user)
 
     try:
