@@ -1,5 +1,5 @@
 from models.user_model.user_model import User, CreateUser, UserType
-from models.auth_model.auth_model import Token, TokenData
+from models.auth_model.auth_model import TokenData
 
 from fastapi import Depends, HTTPException, status, Form
 from typing import Annotated
@@ -64,9 +64,12 @@ async def get_current_active_user(
 
 async def create_user(form_data: Annotated[CreateUser, Form()]):
     existing_user = await get_user_from_db(form_data.email)
+    print("existing_user", existing_user)
     if existing_user:
-        return {"message": "User already exists"}
+        print("User already exists")
+        raise HTTPException(status_code=409, detail="User already exists")
 
+    print("Creating user")
     hashed_password = get_password_hash(form_data.password)
     try:
         await User.insert_one(
@@ -77,7 +80,7 @@ async def create_user(form_data: Annotated[CreateUser, Form()]):
         )
         return {"message": "User created"}
     except Exception as e:
-        return {"message": "User not created", "error": str(e)}
+        raise HTTPException(status_code=500, detail=f"User not created: {str(e)}")
 
 
 async def list_vendors():
