@@ -4,10 +4,12 @@ from datetime import datetime
 from pydantic import Field, EmailStr, BaseModel
 from fastapi import Form
 
+
 class UserType(Enum):
     DEFAULT = "default"
     ADMIN = "admin"
     VENDOR = "vendor"
+
 
 class User(Document):
     full_name: str = Field(..., example="John Doe")
@@ -20,8 +22,9 @@ class User(Document):
     updated_at: datetime = Field(default_factory=datetime.now)
     user_type: UserType = Field(UserType.DEFAULT.value, example=UserType.DEFAULT.value)
 
+
 class CreateUser(BaseModel):
     full_name: str = Form(..., example="John Doe")
     email: EmailStr = Form(..., example="johndoe@example.com")
     password: str = Form(..., example="password")
-    user_type: UserType = Form(..., example=UserType.DEFAULT.value)
+    user_type: UserType = Form(UserType.DEFAULT.value, example=UserType.DEFAULT.value)

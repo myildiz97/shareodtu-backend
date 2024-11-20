@@ -66,7 +66,7 @@ async def create_user(form_data: Annotated[CreateUser, Form()]):
     existing_user = await get_user_from_db(form_data.email)
     if existing_user:
         return {"message": "User already exists"}
-    
+
     hashed_password = get_password_hash(form_data.password)
     try:
         await User.insert_one(
@@ -78,12 +78,13 @@ async def create_user(form_data: Annotated[CreateUser, Form()]):
         return {"message": "User created"}
     except Exception as e:
         return {"message": "User not created", "error": str(e)}
-    
+
 
 async def list_vendors():
     vendors = await User.find(User.user_type == UserType.VENDOR.value).to_list()
 
     # Also return total food count for each vendor
     return [vendor.full_name for vendor in vendors]
+
 
 # async def list_foods_by_vendor():
