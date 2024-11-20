@@ -1,21 +1,14 @@
-from models.user_model.user_model import User, CreateUser, UserType
-from models.food_model.food_model import Food, CreateFood
+from models.user_model.user_model import User, UserType
+from models.food_model.food_model import Food
 from services.users.user_services import get_current_user
+from fastapi import Depends, HTTPException
+from models.user_model.user_model import UserType
+from models.food_model.food_model import Food
+from services.users.user_services import get_current_user
+from fastapi import Depends, HTTPException
 
-from fastapi import Depends, HTTPException, status, Form
-from typing import Annotated
-from fastapi.security import OAuth2PasswordBearer
-
-from config.config import Settings
-
-import jwt
-from jwt.exceptions import InvalidTokenError
-from passlib.context import CryptContext
-
-
-async def create_food(food_type: str):
-    current_user = get_current_user()
-    if current_user.user_type != UserType.VENDOR.value:
+async def create_food(food_type: str, current_user: User = Depends(get_current_user)):
+    if current_user.user_type.value != UserType.VENDOR.value:
         raise HTTPException(
             status_code=403, detail="Only vendors can create food items"
         )
