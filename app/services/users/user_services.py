@@ -1,5 +1,6 @@
 from models.user_model.user_model import User, CreateUser, UserType
 from models.auth_model.auth_model import TokenData
+from models.food_model.food_model import Food
 
 from fastapi import Depends, HTTPException, status, Form
 from typing import Annotated
@@ -85,9 +86,13 @@ async def create_user(form_data: Annotated[CreateUser, Form()]):
 
 async def list_vendors():
     vendors = await User.find(User.user_type == UserType.VENDOR.value).to_list()
-
-    # Also return total food count for each vendor
-    return [vendor.full_name for vendor in vendors]
+    
+    vendor_counts = []
+    for vendor in vendors:
+        total_count = await Food.find(Food.vendor.id == vendor.id).sum("count")
+        vendor_counts.append({"vendor_name": vendor.full_name, "total_count": total_count})
+    
+    return vendor_counts
 
 
 # async def list_foods_by_vendor():

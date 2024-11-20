@@ -46,3 +46,15 @@ async def increase_food_count(food_type: str, current_user: User = Depends(get_c
         return {"message": "Food count increased"}
     except Exception as e:
         return {"message": "Food count not increased", "error": str(e)}
+
+
+async def get_foods_by_vendor(vendor_id: str):
+    vendor = await User.get(vendor_id)
+    if not vendor:
+        raise HTTPException(status_code=404, detail="Vendor not found")
+    if vendor.user_type.value != UserType.VENDOR.value:
+        raise HTTPException(status_code=403, detail="The given user is not a vendor")
+    
+    foods = await Food.find(Food.vendor.id == vendor.id).to_list()
+    
+    return [{"food_type": food.food_type, "count": food.count} for food in foods]
