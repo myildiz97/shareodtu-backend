@@ -5,10 +5,15 @@ from pydantic import Field, EmailStr, BaseModel
 from fastapi import Form
 
 
-class UserType(Enum):
+class UserType(str, Enum):
     DEFAULT = "default"
     ADMIN = "admin"
     VENDOR = "vendor"
+
+
+class Status(str, Enum):
+    OPEN = "Open"
+    CLOSED = "Closed"
 
 
 class User(Document):
@@ -21,6 +26,7 @@ class User(Document):
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
     user_type: UserType = Field(UserType.DEFAULT.value, example=UserType.DEFAULT.value)
+    status: Status = Field(Status.OPEN, example=Status.OPEN)
 
 
 class CreateUser(BaseModel):
@@ -28,3 +34,4 @@ class CreateUser(BaseModel):
     email: EmailStr = Form(..., example="johndoe@example.com")
     password: str = Form(..., example="password")
     user_type: UserType = Form(UserType.DEFAULT.value, example=UserType.DEFAULT.value)
+    status: Status = Form(Status.OPEN, example=Status.OPEN)

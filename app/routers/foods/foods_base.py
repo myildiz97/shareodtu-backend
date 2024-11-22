@@ -2,9 +2,9 @@ from typing import Annotated
 from models.user_model.user_model import User
 
 from services.foods.food_services import (
-create_food as create_food_service,
-increase_food_count as increase_food_count_service,
-get_foods_by_vendor as get_foods_by_vendor_service
+    create_food as create_food_service,
+    increase_food_count as increase_food_count_service,
+    get_foods_by_vendor as get_foods_by_vendor_service,
 )
 
 from services.users.user_services import get_current_user
@@ -15,15 +15,19 @@ router = APIRouter(
     tags=["Foods Base"],
 )
 
+
 @router.post("/create")
 async def create_food(food_type: str, current_user: User = Depends(get_current_user)):
     return await create_food_service(food_type, current_user)
 
 
 @router.post("/increase_count")
-async def increase_food_count(food_type: str, current_user: User = Depends(get_current_user)):
+async def increase_food_count(
+    food_type: str, current_user: User = Depends(get_current_user)
+):
     return await increase_food_count_service(food_type, current_user)
 
-@router.get("/list")
+
+@router.get("/list/{vendor_id}")
 async def get_foods_by_vendor(vendor_id: str):
     return await get_foods_by_vendor_service(vendor_id)

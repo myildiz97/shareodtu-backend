@@ -4,6 +4,7 @@ from services.users.user_services import (
     get_current_active_user,
     create_user as create_user_service,
     list_vendors as list_vendors_service,
+    get_user_by_id,
 )
 
 from fastapi import (
@@ -29,6 +30,12 @@ async def get_user_me(
 async def create_user(form_data: Annotated[CreateUser, Form()]):
     return await create_user_service(form_data)
 
+
 @router.get("/vendors")
 async def list_vendors():
     return await list_vendors_service()
+
+
+@router.get("/{user_id}")
+async def get_user_id(user_id: str):
+    return await get_user_by_id(user_id)

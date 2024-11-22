@@ -12,6 +12,8 @@ import jwt
 from jwt.exceptions import InvalidTokenError
 from passlib.context import CryptContext
 
+from bson.objectid import ObjectId
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -65,12 +67,9 @@ async def get_current_active_user(
 
 async def create_user(form_data: Annotated[CreateUser, Form()]):
     existing_user = await get_user_from_db(form_data.email)
-    print("existing_user", existing_user)
     if existing_user:
-        print("User already exists")
         raise HTTPException(status_code=409, detail="User already exists")
 
-    print("Creating user")
     hashed_password = get_password_hash(form_data.password)
     try:
         await User.insert_one(
@@ -86,13 +85,23 @@ async def create_user(form_data: Annotated[CreateUser, Form()]):
 
 async def list_vendors():
     vendors = await User.find(User.user_type == UserType.VENDOR.value).to_list()
-    
-    vendor_counts = []
+
+    vendor_list = []
     for vendor in vendors:
         total_count = await Food.find(Food.vendor.id == vendor.id).sum("count")
-        vendor_counts.append({"vendor_name": vendor.full_name, "total_count": total_count})
-    
-    return vendor_counts
+        vendor_list.append(
+            {
+                "vendor": vendor,
+                "total_count": total_count,
+            }
+        )
+
+    return vendor_list
 
 
-# async def list_foods_by_vendor():
+async def get_user_by_id(user_id: str):
+    try:
+        user = await User.find_one(User.id == ObjectId(user_id))
+        return user
+    except Exception as e:
+        return {"message": "User not found", "error": str(e)}
