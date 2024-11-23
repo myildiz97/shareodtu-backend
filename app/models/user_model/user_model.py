@@ -4,6 +4,8 @@ from datetime import datetime
 from pydantic import Field, EmailStr, BaseModel
 from fastapi import Form
 
+from typing import Optional
+
 
 class UserType(str, Enum):
     DEFAULT = "default"

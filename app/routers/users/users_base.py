@@ -5,6 +5,8 @@ from services.users.user_services import (
     create_user as create_user_service,
     list_vendors as list_vendors_service,
     get_user_by_id,
+    update_user as update_user_service,
+    delete_user as delete_user_service,
 )
 
 from fastapi import (
@@ -39,3 +41,13 @@ async def list_vendors():
 @router.get("/{user_id}")
 async def get_user_id(user_id: str):
     return await get_user_by_id(user_id)
+
+
+@router.put("/me")
+async def update_user(form_data: Annotated[CreateUser, Form()], current_user: User = Depends(get_current_active_user)):
+    return await update_user_service(form_data, current_user)
+
+
+@router.delete("/me")
+async def delete_user(current_user: User = Depends(get_current_active_user)):
+    return await delete_user_service(current_user)

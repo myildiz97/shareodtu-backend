@@ -105,3 +105,25 @@ async def get_user_by_id(user_id: str):
         return user
     except Exception as e:
         return {"message": "User not found", "error": str(e)}
+
+async def update_user(form_data: Annotated[CreateUser, Form()], current_user: User = Depends(get_current_user)):
+    form_data_dict = form_data.dict(exclude_unset=True).copy()
+    if form_data.password:
+        hashed_password = get_password_hash(form_data.password)
+        form_data_dict['hashed_password'] = hashed_password
+        del form_data_dict['password']  # Remove the password field
+    
+    try: 
+        # Update the user document using the Beanie update method
+        await current_user.update({"$set": form_data_dict})
+        return {"message": "User updated"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"User not updated: {str(e)}")
+
+
+async def delete_user(current_user: User = Depends(get_current_user)):
+    try:
+        await current_user.delete()
+        return {"message": "User deleted"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"User not deleted: {str(e)}")
