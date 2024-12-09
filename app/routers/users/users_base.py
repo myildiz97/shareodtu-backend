@@ -7,6 +7,7 @@ from services.users.user_services import (
     get_user_by_id,
     update_user as update_user_service,
     delete_user as delete_user_service,
+    send_email as send_email_service,
 )
 
 from fastapi import (
@@ -51,3 +52,7 @@ async def update_user(form_data: Annotated[CreateUser, Form()], current_user: Us
 @router.delete("/me")
 async def delete_user(current_user: User = Depends(get_current_active_user)):
     return await delete_user_service(current_user)
+
+@router.post("/send_email")
+async def send_email(to_address: str):
+    return await send_email_service(to_address)

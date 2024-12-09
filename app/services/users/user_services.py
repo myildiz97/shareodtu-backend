@@ -1,3 +1,4 @@
+import smtplib
 from models.user_model.user_model import User, CreateUser, UserType
 from models.auth_model.auth_model import TokenData
 from models.food_model.food_model import Food
@@ -17,6 +18,42 @@ from bson.objectid import ObjectId
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+async def send_email(to_addrs: str):
+
+    mailUsername = 'shareodtuteam@gmail.com'
+    mailPassword = 'kxjl vcmk qqrn mzjx'
+
+
+
+    print("Sending email to: ", to_addrs)
+    from_addr = 'shareodtuteam@gmail.com'
+    #to_addrs = '.com'
+
+    msg = "\r\n".join(
+    [
+        "From: shareodtuteam@gmail.com",
+        "To: " + to_addrs,
+        "Subject: Verification Code",
+        "",
+        "message",
+    ]
+    )
+
+    print(msg)
+
+    server = smtplib.SMTP('smtp.gmail.com:587')
+    print("Connected to server")
+    server.ehlo()
+    print("ehlo")
+    server.starttls()
+    print("starttls")
+    server.login(mailUsername, mailPassword)
+    print("Logged in")
+    server.sendmail(from_addr, to_addrs, msg)
+    print("Email sent")
+    server.quit()
 
 
 def verify_password(plain_password, hashed_password):
