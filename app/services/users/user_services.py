@@ -1,4 +1,8 @@
 import smtplib
+import random
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from datetime import datetime, timedelta
 from models.user_model.user_model import User, CreateUser, UserType
 from models.auth_model.auth_model import TokenData
 from models.food_model.food_model import Food
@@ -20,40 +24,47 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-async def send_email(to_addrs: str):
+async def send_verification_email(to_address: str):
+    # Generate a 6-digit numeric verification code
+    verification_code = random.randint(100000, 999999)
+    expiration_time = datetime.now() + timedelta(minutes=10)  # Set expiration time to 10 minutes from now
 
     mailUsername = 'shareodtuteam@gmail.com'
     mailPassword = 'kxjl vcmk qqrn mzjx'
 
-
-
-    print("Sending email to: ", to_addrs)
+    print("Sending email to: ", to_address)
     from_addr = 'shareodtuteam@gmail.com'
-    #to_addrs = '.com'
 
-    msg = "\r\n".join(
-    [
-        "From: shareodtuteam@gmail.com",
-        "To: " + to_addrs,
-        "Subject: Verification Code",
-        "",
-        "message",
-    ]
-    )
+    # Create the email message
+    msg = MIMEMultipart()
+    msg['From'] = from_addr
+    msg['To'] = to_address
+    msg['Subject'] = 'Verification Code'
+    body = f'Your verification code is: {verification_code}'
+    msg.attach(MIMEText(body, 'plain'))
 
-    print(msg)
+    # Send the email
+    try:
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(mailUsername, mailPassword)
+        server.sendmail(from_addr, to_address, msg.as_string())
+        server.quit()
+        print("Email sent successfully")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to send verification email: {str(e)}")
 
-    server = smtplib.SMTP('smtp.gmail.com:587')
-    print("Connected to server")
-    server.ehlo()
-    print("ehlo")
-    server.starttls()
-    print("starttls")
-    server.login(mailUsername, mailPassword)
-    print("Logged in")
-    server.sendmail(from_addr, to_addrs, msg)
-    print("Email sent")
-    server.quit()
+    # Store the verification code and its expiration time in the user's record
+    try:
+        user = await get_user_from_db(to_address)
+        user.verification_code = verification_code
+        user.verification_code_expiration = expiration_time
+        await user.save()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save verification code: {str(e)}")
+
+    return {"message": "Verification email sent"}
+
 
 
 def verify_password(plain_password, hashed_password):
@@ -115,6 +126,10 @@ async def create_user(form_data: Annotated[CreateUser, Form()]):
                 hashed_password=hashed_password,
             )
         )
+        newUser = await get_user_from_db(form_data.email)
+        newUser.disabled = True
+        await newUser.save()
+        await send_verification_email(newUser.email)
         return {"message": "User created"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"User not created: {str(e)}")
@@ -164,3 +179,16 @@ async def delete_user(current_user: User = Depends(get_current_user)):
         return {"message": "User deleted"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"User not deleted: {str(e)}")
+
+
+async def verify_code(to_address: str, code: int):
+    user = await get_user_from_db(to_address)
+    if user.verification_code != code:
+        raise HTTPException(status_code=400, detail="Invalid verification code")
+    if datetime.now() > user.verification_code_expiration:
+        raise HTTPException(status_code=400, detail="Verification code has expired")
+    user.verification_code = None
+    user.verification_code_expiration = None
+    user.disabled = False
+    await user.save()
+    return {"message": "User verified"}

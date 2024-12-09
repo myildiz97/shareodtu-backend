@@ -1,6 +1,6 @@
 from enum import Enum
 from beanie import Document
-from datetime import datetime
+from datetime import datetime, timedelta
 from pydantic import Field, EmailStr, BaseModel
 from fastapi import Form
 
@@ -29,6 +29,8 @@ class User(Document):
     updated_at: datetime = Field(default_factory=datetime.now)
     user_type: UserType = Field(UserType.DEFAULT.value, example=UserType.DEFAULT.value)
     status: Status = Field(Status.OPEN, example=Status.OPEN)
+    verification_code: Optional[int] = Field(None, example=123456)
+    verification_code_expiration: Optional[datetime] = Field(None, example=datetime.now())
 
 
 class CreateUser(BaseModel):
