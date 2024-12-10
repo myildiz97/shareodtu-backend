@@ -117,15 +117,16 @@ async def update_user(
             exclude_unset=True,
         )
 
-        print("update_data", update_data)
-
         # Convert empty strings to None
         for key, value in update_data.items():
-            if value == "":
+            if value == "" or (
+                key == "status" and current_user.user_type == UserType.DEFAULT
+            ):
                 update_data[key] = None
 
         # if "current_password" in update_data and "new_password" in update_data:
-        if update_data["current_password"] and update_data["new_password"]:
+        # if update_data["current_password"] and update_data["new_password"]:
+        if "current_password" in update_data and "new_password" in update_data:
             if not verify_password(
                 update_data["current_password"],
                 current_user.hashed_password,
@@ -145,6 +146,7 @@ async def update_user(
                 setattr(current_user, key, value)
 
         current_user.updated_at = datetime.now()
+
         await current_user.save()
 
         return {"message": "User updated"}
