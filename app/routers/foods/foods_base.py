@@ -9,6 +9,8 @@ from services.foods.food_services import (
     update_food_count as update_food_count_service,
     get_food_count as get_food_count_service,
     get_foods_by_vendor as get_foods_by_vendor_service,
+    create_food_collection_request as create_food_collection_request_service,
+    validate_collection_code as validate_collection_code_service,
 )
 
 from services.users.user_services import get_current_user
@@ -52,3 +54,11 @@ async def update_food_count(food_type: str, count: int, current_user: User = Dep
 @router.get("/get_count")
 async def get_food_count(food_type: str, vendor_id: str):
     return await get_food_count_service(food_type, vendor_id)
+
+@router.post("/collect")
+async def create_food_collection_request(food_type: str, vendor_id: str, current_user: User = Depends(get_current_user)):
+    return await create_food_collection_request_service(food_type, vendor_id, current_user)
+
+@router.post("/validate_collection_code")
+async def validate_collection_code(food_type: str, collection_code: int, current_user: User = Depends(get_current_user)):
+    return await validate_collection_code_service(food_type, collection_code, current_user)
