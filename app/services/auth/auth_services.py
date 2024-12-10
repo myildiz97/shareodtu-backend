@@ -22,6 +22,11 @@ async def authenticate_user(email: str, password: str) -> User:
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    if user.disabled:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Inactive user, please verify your email",
+        )
     return user
 
 
