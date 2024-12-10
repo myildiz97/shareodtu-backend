@@ -39,3 +39,10 @@ class CreateUser(BaseModel):
     password: str = Form(..., example="password")
     user_type: UserType = Form(UserType.DEFAULT.value, example=UserType.DEFAULT.value)
     status: Status = Form(Status.OPEN, example=Status.OPEN)
+
+
+class UpdateUser(BaseModel):
+    full_name: Optional[str] = Field(None, example="John Doe")
+    current_password: Optional[str] = Field(None, example="password")
+    new_password: Optional[str] = Field(None, example="password")
+    status: Optional[Status] = Field(None, example=Status.OPEN)

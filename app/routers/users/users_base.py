@@ -1,5 +1,5 @@
 from typing import Annotated
-from models.user_model.user_model import User, CreateUser
+from models.user_model.user_model import User, CreateUser, UpdateUser
 from services.users.user_services import (
     get_current_active_user,
     create_user as create_user_service,
@@ -15,6 +15,7 @@ from fastapi import (
     APIRouter,
     Depends,
     Form,
+    Body,
 )
 
 router = APIRouter(
@@ -46,8 +47,11 @@ async def get_user_id(user_id: str):
 
 
 @router.put("/me")
-async def update_user(form_data: Annotated[CreateUser, Form()], current_user: User = Depends(get_current_active_user)):
-    return await update_user_service(form_data, current_user)
+async def update_user(
+    user_data: Annotated[UpdateUser, Body()],
+    current_user: User = Depends(get_current_active_user),
+):
+    return await update_user_service(user_data, current_user)
 
 
 @router.delete("/me")

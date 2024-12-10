@@ -3,11 +3,11 @@ import random
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
-from models.user_model.user_model import User, CreateUser, UserType
+from models.user_model.user_model import User, CreateUser, UserType, UpdateUser, Status
 from models.auth_model.auth_model import TokenData
 from models.food_model.food_model import Food
 
-from fastapi import Depends, HTTPException, status, Form
+from fastapi import Depends, HTTPException, status, Form, Body
 from typing import Annotated
 from fastapi.security import OAuth2PasswordBearer
 
@@ -16,6 +16,7 @@ from config.config import Settings
 import jwt
 from jwt.exceptions import InvalidTokenError
 from passlib.context import CryptContext
+from datetime import datetime
 
 from bson.objectid import ObjectId
 
@@ -158,16 +159,48 @@ async def get_user_by_id(user_id: str):
     except Exception as e:
         return {"message": "User not found", "error": str(e)}
 
-async def update_user(form_data: Annotated[CreateUser, Form()], current_user: User = Depends(get_current_user)):
-    form_data_dict = form_data.dict(exclude_unset=True).copy()
-    if form_data.password:
-        hashed_password = get_password_hash(form_data.password)
-        form_data_dict['hashed_password'] = hashed_password
-        del form_data_dict['password']  # Remove the password field
-    
-    try: 
-        # Update the user document using the Beanie update method
-        await current_user.update({"$set": form_data_dict})
+
+async def update_user(
+    user_data: Annotated[UpdateUser, Body()],
+    current_user: User = Depends(get_current_user),
+):
+    try:
+        update_data = user_data.model_dump(
+            exclude_unset=True,
+        )
+
+        # Convert empty strings to None
+        for key, value in update_data.items():
+            if value == "" or (
+                key == "status" and current_user.user_type == UserType.DEFAULT
+            ):
+                update_data[key] = None
+
+        # if "current_password" in update_data and "new_password" in update_data:
+        # if update_data["current_password"] and update_data["new_password"]:
+        if "current_password" in update_data and "new_password" in update_data:
+            if not verify_password(
+                update_data["current_password"],
+                current_user.hashed_password,
+            ):
+                raise HTTPException(
+                    status_code=400,
+                    detail="Incorrect current password",
+                )
+            update_data["hashed_password"] = get_password_hash(
+                update_data["new_password"]
+            )
+            del update_data["current_password"]
+            del update_data["new_password"]
+
+        for key, value in update_data.items():
+            if value is not None:
+                setattr(current_user, key, value)
+
+        current_user.updated_at = datetime.now()
+
+        await current_user.save()
+
         return {"message": "User updated"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"User not updated: {str(e)}")
@@ -179,7 +212,6 @@ async def delete_user(current_user: User = Depends(get_current_user)):
         return {"message": "User deleted"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"User not deleted: {str(e)}")
-
 
 async def verify_code(to_address: str, code: int):
     user = await get_user_from_db(to_address)
