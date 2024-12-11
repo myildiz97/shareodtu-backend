@@ -28,32 +28,37 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 async def send_verification_email(to_address: str):
     # Generate a 6-digit numeric verification code
     verification_code = random.randint(100000, 999999)
-    expiration_time = datetime.now() + timedelta(minutes=10)  # Set expiration time to 10 minutes from now
+    expiration_time = datetime.now() + timedelta(
+        minutes=10
+    )  # Set expiration time to 10 minutes from now
 
-    mailUsername = 'shareodtuteam@gmail.com'
-    mailPassword = 'kxjl vcmk qqrn mzjx'
+    # TODO: Move these to environment variables
+    mailUsername = "shareodtuteam@gmail.com"
+    mailPassword = "kxjl vcmk qqrn mzjx"
 
-    print("Sending email to: ", to_address)
-    from_addr = 'shareodtuteam@gmail.com'
+    # print("Sending email to: ", to_address)
+    from_addr = "shareodtuteam@gmail.com"
 
     # Create the email message
     msg = MIMEMultipart()
-    msg['From'] = from_addr
-    msg['To'] = to_address
-    msg['Subject'] = 'Verification Code'
-    body = f'Your verification code is: {verification_code}'
-    msg.attach(MIMEText(body, 'plain'))
+    msg["From"] = from_addr
+    msg["To"] = to_address
+    msg["Subject"] = "Verification Code"
+    body = f"Your verification code is: {verification_code}"
+    msg.attach(MIMEText(body, "plain"))
 
     # Send the email
     try:
-        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server = smtplib.SMTP("smtp.gmail.com", 587)
         server.starttls()
         server.login(mailUsername, mailPassword)
         server.sendmail(from_addr, to_address, msg.as_string())
         server.quit()
         print("Email sent successfully")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to send verification email: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to send verification email: {str(e)}"
+        )
 
     # Store the verification code and its expiration time in the user's record
     try:
@@ -62,10 +67,11 @@ async def send_verification_email(to_address: str):
         user.verification_code_expiration = expiration_time
         await user.save()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to save verification code: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to save verification code: {str(e)}"
+        )
 
     return {"message": "Verification email sent"}
-
 
 
 def verify_password(plain_password, hashed_password):
@@ -142,12 +148,24 @@ async def list_vendors():
     vendor_list = []
     for vendor in vendors:
         total_count = await Food.find(Food.vendor.id == vendor.id).sum("count")
+        if total_count is None:
+            total_count = 0  # Set default value if total_count is None
         vendor_list.append(
             {
                 "vendor": vendor,
                 "total_count": total_count,
             }
         )
+
+    vendor_list.sort(
+        key=lambda x: x["total_count"],
+        reverse=True,
+    )
+
+    vendor_list.sort(
+        key=lambda x: x["vendor"].status,
+        reverse=True,
+    )
 
     return vendor_list
 
@@ -212,6 +230,7 @@ async def delete_user(current_user: User = Depends(get_current_user)):
         return {"message": "User deleted"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"User not deleted: {str(e)}")
+
 
 async def verify_code(to_address: str, code: int):
     user = await get_user_from_db(to_address)
