@@ -33,11 +33,11 @@ async def send_verification_email(to_address: str):
     )  # Set expiration time to 10 minutes from now
 
     # TODO: Move these to environment variables
-    mailUsername = "shareodtuteam@gmail.com"
-    mailPassword = "kxjl vcmk qqrn mzjx"
+    mailUsername = Settings().MAIL_USERNAME
+    mailPassword = Settings().MAIL_PASSWORD
 
     # print("Sending email to: ", to_address)
-    from_addr = "shareodtuteam@gmail.com"
+    from_addr = Settings().MAIL_USERNAME
 
     # Create the email message
     msg = MIMEMultipart()
@@ -230,16 +230,3 @@ async def delete_user(current_user: User = Depends(get_current_user)):
         return {"message": "User deleted"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"User not deleted: {str(e)}")
-
-
-async def verify_code(to_address: str, code: int):
-    user = await get_user_from_db(to_address)
-    if user.verification_code != code:
-        raise HTTPException(status_code=400, detail="Invalid verification code")
-    if datetime.now() > user.verification_code_expiration:
-        raise HTTPException(status_code=400, detail="Verification code has expired")
-    user.verification_code = None
-    user.verification_code_expiration = None
-    user.disabled = False
-    await user.save()
-    return {"message": "User verified"}
