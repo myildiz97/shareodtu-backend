@@ -26,3 +26,13 @@ class CreateFood(BaseModel):
 class UpdateFood(BaseModel):
     food_name: Optional[str] = Body(None, example="Pizza")
     count: Optional[int] = Body(None, example=10)
+
+
+class CollectFoodData(BaseModel):
+    food_type: str = Form(..., example="Pizza")
+    vendor_id: str = Form(..., example="1234")
+
+
+class ValidateCollectionCode(BaseModel):
+    food_type: str = Form(..., example="Pizza")
+    collection_code: int = Form(..., example=123456)

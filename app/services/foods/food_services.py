@@ -124,7 +124,9 @@ async def get_foods_by_vendor(vendor_id: str):
 
 
 async def create_food_collection_request(
-    food_type: str, vendor_id: str, current_user: User = Depends(get_current_user)
+    food_type: str,
+    vendor_id: str,
+    current_user: User = Depends(get_current_user),
 ):
     if current_user.user_type.value != UserType.DEFAULT.value:
         raise HTTPException(

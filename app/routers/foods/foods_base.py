@@ -1,6 +1,11 @@
 from typing import Annotated, Optional
 from models.user_model.user_model import User
-from models.food_model.food_model import UpdateFood, CreateFood
+from models.food_model.food_model import (
+    UpdateFood,
+    CreateFood,
+    CollectFoodData,
+    ValidateCollectionCode,
+)
 
 from services.foods.food_services import (
     create_food as create_food_service,
@@ -59,17 +64,23 @@ async def delete_food(
 
 @router.post("/collect")
 async def create_food_collection_request(
-    food_type: str, vendor_id: str, current_user: User = Depends(get_current_user)
+    collect_food_data: Annotated[CollectFoodData, Body()],
+    current_user: User = Depends(get_current_user),
 ):
     return await create_food_collection_request_service(
-        food_type, vendor_id, current_user
+        food_type=collect_food_data.food_type,
+        vendor_id=collect_food_data.vendor_id,
+        current_user=current_user,
     )
 
 
 @router.post("/validate_collection_code")
 async def validate_collection_code(
-    food_type: str, collection_code: int, current_user: User = Depends(get_current_user)
+    validate_collection_code_data: Annotated[ValidateCollectionCode, Body()],
+    current_user: User = Depends(get_current_user),
 ):
     return await validate_collection_code_service(
-        food_type, collection_code, current_user
+        food_type=validate_collection_code_data.food_type,
+        collection_code=validate_collection_code_data.collection_code,
+        current_user=current_user,
     )
