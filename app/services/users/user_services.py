@@ -1,12 +1,7 @@
-import smtplib
-import random
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from datetime import datetime, timedelta
-from models.user_model.user_model import User, CreateUser, UserType, UpdateUser, Status
+from models.user_model.user_model import User, CreateUser, UserType, UpdateUser, RegisterVendor
 from models.auth_model.auth_model import TokenData
 from models.food_model.food_model import Food
-from services.auth.auth_services import send_verification_email
+from services.auth.auth_services import send_verification_email, send_approval_waiting_email, send_approval_email
 from services.shared.shared_services import get_user_from_db, verify_password
 
 from fastapi import Depends, HTTPException, status, Form, Body
@@ -170,3 +165,43 @@ async def delete_user(current_user: User = Depends(get_current_user)):
         return {"message": "User deleted"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"User not deleted: {str(e)}")
+
+
+
+async def register_vendor(form_data: Annotated[RegisterVendor, Form()]):
+    existing_user = await get_user_from_db(form_data.email)
+    if existing_user:
+        raise HTTPException(status_code=409, detail="User already exists")
+
+    hashed_password = get_password_hash(form_data.password)
+    try:
+        await User.insert_one(
+            User(
+                **form_data.model_dump(),
+                hashed_password=hashed_password,
+            )
+        )
+        newUser = await get_user_from_db(form_data.email)
+        newUser.disabled = True
+        await newUser.save()
+        await send_approval_waiting_email(newUser.email)
+        return {"message": "User created"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"User not created: {str(e)}")
+
+async def approve_vendor(user_id: str):
+    try:
+        user = await User.find_one(User.id == ObjectId(user_id))
+        user.disabled = False
+        await user.save()
+        await send_approval_email(user.email)
+        return {"message": "Vendor approved"}
+    except Exception as e:
+        return {"message": "Vendor could not approved", "error": str(e)}
+
+async def list_waiting_vendors():
+    vendors = await User.find(User.user_type == UserType.VENDOR.value, User.disabled == True).to_list()
+    vendor_list = []
+    for vendor in vendors:
+        vendor_list.append(vendor)
+    return vendor_list

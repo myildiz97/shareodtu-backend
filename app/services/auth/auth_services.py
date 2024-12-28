@@ -198,3 +198,59 @@ async def send_reset_password_email(email: str):
         )
 
     return {"message": "Reset password email sent"}
+
+async def send_approval_waiting_email(email: str):
+    mailUsername = Settings().MAIL_USERNAME
+    mailPassword = Settings().MAIL_PASSWORD
+
+    from_addr = Settings().MAIL_USERNAME
+
+    # Create the email message
+    msg = MIMEMultipart()
+    msg["From"] = from_addr
+    msg["To"] = email
+    msg["Subject"] = "Approval Waiting"
+    body = "Your account is awaiting approval. You will receive an email once your account is approved."
+    msg.attach(MIMEText(body, "plain"))
+
+    # Send the email
+    try:
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.starttls()
+        server.login(mailUsername, mailPassword)
+        server.sendmail(from_addr, email, msg.as_string())
+        server.quit()
+        print("Email sent successfully")
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to send email: {str(e)}"
+        )    
+    return {"message": "Approval waiting email sent"}
+
+async def send_approval_email(email: str):
+    mailUsername = Settings().MAIL_USERNAME
+    mailPassword = Settings().MAIL_PASSWORD
+
+    from_addr = Settings().MAIL_USERNAME
+
+    # Create the email message
+    msg = MIMEMultipart()
+    msg["From"] = from_addr
+    msg["To"] = email
+    msg["Subject"] = "Account Approved"
+    body = "Your account has been approved. You can now log in."
+    msg.attach(MIMEText(body, "plain"))
+
+    # Send the email
+    try:
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.starttls()
+        server.login(mailUsername, mailPassword)
+        server.sendmail(from_addr, email, msg.as_string())
+        server.quit()
+        print("Email sent successfully")
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to send email: {str(e)}"
+        )    
+    return {"message": "Approval email sent"}

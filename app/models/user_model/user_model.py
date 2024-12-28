@@ -33,18 +33,32 @@ class User(Document):
     verification_code_expiration: Optional[datetime] = Field(None, example=datetime.now())
     reset_password_code: Optional[int] = Field(None, example=123456)
     reset_password_code_expiration: Optional[datetime] = Field(None, example=datetime.now())
-
+    
+    # vendor registration request
+    vendor_address: Optional[str] = Field(None, example="Informatics Institute Building, 7th Floor, Room 705")
+    facility_name: Optional[str] = Field(None, example="Kumpir Cafe")
+    vendor_phone: Optional[str] = Field(None, example="03122223344")
+    vendor_identity_no: Optional[str] = Field(None, example="12345678910")
+    # vendor_id_photo:
 
 class CreateUser(BaseModel):
     full_name: str = Form(..., example="John Doe")
     email: EmailStr = Form(..., example="johndoe@example.com")
     password: str = Form(..., example="password")
     user_type: UserType = Form(UserType.DEFAULT.value, example=UserType.DEFAULT.value)
-    status: Status = Form(Status.OPEN, example=Status.OPEN)
-
 
 class UpdateUser(BaseModel):
     full_name: Optional[str] = Field(None, example="John Doe")
     current_password: Optional[str] = Field(None, example="password")
     new_password: Optional[str] = Field(None, example="password")
     status: Optional[Status] = Field(None, example=Status.OPEN)
+
+class RegisterVendor(BaseModel):
+    full_name: str = Form(..., example="John Doe")
+    email: EmailStr = Form(..., example="johndoe@example.com")
+    password: str = Form(..., example="password")
+    user_type: UserType = Form(UserType.VENDOR.value, example=UserType.VENDOR.value)
+    vendor_address: Optional[str] = Field(None, example="Informatics Institute Building, 7th Floor, Room 705")
+    facility_name: Optional[str] = Field(None, example="Kumpir Cafe")
+    vendor_phone: Optional[str] = Field(None, example="03122223344")
+    vendor_identity_no: Optional[str] = Field(None, example="12345678910")
