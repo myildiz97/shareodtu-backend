@@ -86,18 +86,14 @@ async def verify_user(
         )
 
 
-async def send_verification_email(email: str):
+async def send_code(email: str, message: str):
     # Generate a 6-digit numeric verification code
     verification_code = random.randint(100000, 999999)
-    expiration_time = datetime.now() + timedelta(
-        minutes=10
-    )  # Set expiration time to 10 minutes from now
 
-    # TODO: Move these to environment variables
     mailUsername = Settings().MAIL_USERNAME
     mailPassword = Settings().MAIL_PASSWORD
 
-    # print("Sending email to: ", email)
+    print("Sending email to: ", email)
     from_addr = Settings().MAIL_USERNAME
 
     # Create the email message
@@ -105,7 +101,7 @@ async def send_verification_email(email: str):
     msg["From"] = from_addr
     msg["To"] = email
     msg["Subject"] = "Verification Code"
-    body = f"Your verification code is: {verification_code}"
+    body = f"{message}{verification_code}"
     msg.attach(MIMEText(body, "plain"))
 
     # Send the email
@@ -119,13 +115,49 @@ async def send_verification_email(email: str):
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Failed to send verification email: {str(e)}"
-        )
+        )    
+    return verification_code
+
+async def send_verification_email(email: str):
+    # Set expiration time to 10 minutes from now
+    expiration_time = datetime.now() + timedelta(minutes=10)
+
+    verification_code = await send_code(email, "To verify your account, please enter the code: ")
 
     # Store the verification code and its expiration time in the user's record
     try:
         user = await get_user_from_db(email)
         user.verification_code = verification_code
         user.verification_code_expiration = expiration_time
+        await user.save()
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to save verification code: {str(e)}"
+        )
+
+    return {"message": "Verification email sent"}
+
+async def send_forgot_password_email(email: str): 
+    user = await get_user_from_db(email)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found",
+        )
+    if user.disabled:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Inactive user, please verify your email",
+        )
+    
+    # Set expiration time to 10 minutes from now
+    expiration_time = datetime.now() + timedelta(minutes=10)
+    forgot_password_code = await send_code(email, "To reset your password, please enter the code: ")
+
+    # Store the verification code and its expiration time in the user's record
+    try:
+        user.forgot_password_code = forgot_password_code
+        user.forgot_password_code_expiration = expiration_time
         await user.save()
     except Exception as e:
         raise HTTPException(

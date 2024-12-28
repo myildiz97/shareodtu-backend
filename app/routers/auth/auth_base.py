@@ -5,6 +5,7 @@ from services.auth.auth_services import (
     create_access_token,
     verify_user,
     send_verification_email as send_verification_email_service,
+    send_forgot_password_email as send_forgot_password_email_service,
 )
 from config.config import Settings
 from datetime import timedelta
@@ -45,3 +46,7 @@ async def verify(
 @router.post("/send_verification_email/{email}")
 async def send_verification_email(email: str):
     return await send_verification_email_service(email)
+
+@router.post("/send_forgot_password_email/{email}")
+async def send_forgot_password_email(email: str):
+    return await send_forgot_password_email_service(email)
