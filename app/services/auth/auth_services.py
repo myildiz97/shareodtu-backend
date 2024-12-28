@@ -1,6 +1,6 @@
 from models.user_model.user_model import User
 from models.auth_model.auth_model import VerificationData
-from services.users.user_services import get_user_from_db, verify_password
+from services.shared.shared_services import get_user_from_db, verify_password
 from config.config import Settings
 
 from datetime import datetime, timedelta, timezone

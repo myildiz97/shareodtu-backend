@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 from models.user_model.user_model import User, CreateUser, UserType, UpdateUser, Status
 from models.auth_model.auth_model import TokenData
 from models.food_model.food_model import Food
+from services.auth.auth_services import send_verification_email
+from services.shared.shared_services import get_user_from_db, verify_password
 
 from fastapi import Depends, HTTPException, status, Form, Body
 from typing import Annotated
@@ -24,70 +26,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-
-async def send_verification_email(to_address: str):
-    # Generate a 6-digit numeric verification code
-    verification_code = random.randint(100000, 999999)
-    expiration_time = datetime.now() + timedelta(
-        minutes=10
-    )  # Set expiration time to 10 minutes from now
-
-    # TODO: Move these to environment variables
-    mailUsername = Settings().MAIL_USERNAME
-    mailPassword = Settings().MAIL_PASSWORD
-
-    # print("Sending email to: ", to_address)
-    from_addr = Settings().MAIL_USERNAME
-
-    # Create the email message
-    msg = MIMEMultipart()
-    msg["From"] = from_addr
-    msg["To"] = to_address
-    msg["Subject"] = "Verification Code"
-    body = f"Your verification code is: {verification_code}"
-    msg.attach(MIMEText(body, "plain"))
-
-    # Send the email
-    try:
-        server = smtplib.SMTP("smtp.gmail.com", 587)
-        server.starttls()
-        server.login(mailUsername, mailPassword)
-        server.sendmail(from_addr, to_address, msg.as_string())
-        server.quit()
-        print("Email sent successfully")
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to send verification email: {str(e)}"
-        )
-
-    # Store the verification code and its expiration time in the user's record
-    try:
-        user = await get_user_from_db(to_address)
-        user.verification_code = verification_code
-        user.verification_code_expiration = expiration_time
-        await user.save()
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to save verification code: {str(e)}"
-        )
-
-    return {"message": "Verification email sent"}
-
-
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
-
-
 def get_password_hash(password):
     return pwd_context.hash(password)
-
-
-async def get_user_from_db(email: str) -> User | None:
-    try:
-        user = await User.find_one(User.email == email)
-        return user
-    except Exception as e:
-        return {"message": "User not found", "error": str(e)}
 
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
