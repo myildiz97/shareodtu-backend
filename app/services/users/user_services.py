@@ -46,6 +46,11 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         raise credentials_exception
     return user
 
+async def get_user_type_by_email(email: str):
+    user = await get_user_from_db(email)
+    if user:
+        return user.user_type
+    raise HTTPException(status_code=404, detail="User not found")
 
 async def get_current_active_user(
     current_user: Annotated[User, Depends(get_current_user)],

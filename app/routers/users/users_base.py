@@ -10,6 +10,7 @@ from services.users.user_services import (
     register_vendor as register_vendor_service,
     list_waiting_vendors as list_waiting_vendors_service,
     approve_vendor as approve_vendor_service,
+    get_user_type_by_email as get_user_type_by_email_service,
 )
 
 from fastapi import (
@@ -30,6 +31,10 @@ async def get_user_me(
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
     return current_user
+
+@router.get("/type/{email}")
+async def get_user_type_by_email(email: str):
+    return await get_user_type_by_email_service(email)
 
 
 @router.post("/create")
