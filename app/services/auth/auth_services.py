@@ -137,7 +137,7 @@ async def send_verification_email(email: str):
 
     return {"message": "Verification email sent"}
 
-async def send_forgot_password_email(email: str): 
+async def send_reset_password_email(email: str): 
     user = await get_user_from_db(email)
     if not user:
         raise HTTPException(
@@ -152,16 +152,16 @@ async def send_forgot_password_email(email: str):
     
     # Set expiration time to 10 minutes from now
     expiration_time = datetime.now() + timedelta(minutes=10)
-    forgot_password_code = await send_code(email, "To reset your password, please enter the code: ")
+    reset_password_code = await send_code(email, "To reset your password, please enter the code: ")
 
     # Store the verification code and its expiration time in the user's record
     try:
-        user.forgot_password_code = forgot_password_code
-        user.forgot_password_code_expiration = expiration_time
+        user.reset_password_code = reset_password_code
+        user.reset_password_code_expiration = expiration_time
         await user.save()
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Failed to save verification code: {str(e)}"
         )
 
-    return {"message": "Verification email sent"}
+    return {"message": "Reset password email sent"}

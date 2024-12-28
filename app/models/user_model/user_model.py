@@ -31,8 +31,8 @@ class User(Document):
     status: Status = Field(Status.OPEN, example=Status.OPEN)
     verification_code: Optional[int] = Field(None, example=123456)
     verification_code_expiration: Optional[datetime] = Field(None, example=datetime.now())
-    forgot_password_code: Optional[int] = Field(None, example=123456)
-    forgot_password_code_expiration: Optional[datetime] = Field(None, example=datetime.now())
+    reset_password_code: Optional[int] = Field(None, example=123456)
+    reset_password_code_expiration: Optional[datetime] = Field(None, example=datetime.now())
 
 
 class CreateUser(BaseModel):
