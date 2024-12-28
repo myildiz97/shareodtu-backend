@@ -86,6 +86,39 @@ async def verify_user(
         )
 
 
+async def verify_reset_password_code(
+    verification_data: VerificationData,
+):
+    try:
+        user = await get_user_from_db(verification_data.email)
+
+        if user.reset_password_code != verification_data.code:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid reset password code",
+            )
+
+        if datetime.now() > user.reset_password_code_expiration:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Reset password code has expired",
+            )
+
+        user.reset_password_code = None
+        user.reset_password_code_expiration = None
+
+        await user.save()
+        return {"message": "Reset password code verified"}
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        # Log unexpected errors here if needed
+        print(f"Unexpected error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to verify reset password code",
+        )
+
 async def send_code(email: str, message: str):
     # Generate a 6-digit numeric verification code
     verification_code = random.randint(100000, 999999)

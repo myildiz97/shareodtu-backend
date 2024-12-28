@@ -4,6 +4,7 @@ from services.auth.auth_services import (
     authenticate_user,
     create_access_token,
     verify_user,
+    verify_reset_password_code as verify_reset_password_code_service,
     send_verification_email as send_verification_email_service,
     send_reset_password_email as send_reset_password_email_service,
 )
@@ -42,6 +43,13 @@ async def verify(
         verification_data,
     )
 
+@router.post("/verify_reset_password_code")
+async def verify_reset_password_code(
+    verification_data: Annotated[VerificationData, Body()],
+):
+    return await verify_reset_password_code_service(
+        verification_data,
+    )
 
 @router.post("/send_verification_email/{email}")
 async def send_verification_email(email: str):
