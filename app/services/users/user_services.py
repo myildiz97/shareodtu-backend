@@ -4,7 +4,7 @@ from models.food_model.food_model import Food
 from services.auth.auth_services import send_verification_email, send_approval_waiting_email, send_approval_email
 from services.shared.shared_services import get_user_from_db, verify_password
 
-from fastapi import Depends, HTTPException, status, Form, Body
+from fastapi import Depends, HTTPException, status, Form, Body, UploadFile
 from typing import Annotated
 from fastapi.security import OAuth2PasswordBearer
 
@@ -210,3 +210,10 @@ async def list_waiting_vendors():
     for vendor in vendors:
         vendor_list.append(vendor)
     return vendor_list
+
+async def save_image(file: UploadFile) -> bytes:
+    try:
+        contents = await file.read()
+        return contents
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to upload image: {str(e)}")

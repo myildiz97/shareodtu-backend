@@ -2,7 +2,7 @@ from enum import Enum
 from beanie import Document
 from datetime import datetime, timedelta
 from pydantic import Field, EmailStr, BaseModel
-from fastapi import Form
+from fastapi import Form, UploadFile, HTTPException
 
 from typing import Optional
 
@@ -39,6 +39,7 @@ class User(Document):
     facility_name: Optional[str] = Field(None, example="Kumpir Cafe")
     vendor_phone: Optional[str] = Field(None, example="03122223344")
     vendor_identity_no: Optional[str] = Field(None, example="12345678910")
+    image: Optional[bytes] = None
     # vendor_id_photo:
 
 class CreateUser(BaseModel):
@@ -62,3 +63,4 @@ class RegisterVendor(BaseModel):
     facility_name: Optional[str] = Field(None, example="Kumpir Cafe")
     vendor_phone: Optional[str] = Field(None, example="03122223344")
     vendor_identity_no: Optional[str] = Field(None, example="12345678910")
+    image: Optional[bytes] = None  # Field to store the image as binary data
