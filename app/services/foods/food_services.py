@@ -1,5 +1,5 @@
 from models.food_model.food_model import Food, UpdateFood, CreateFood
-from services.users.user_services import get_current_user
+from services.users.user_services import get_current_user, get_user_by_id
 from fastapi import Depends, HTTPException, Body
 from models.user_model.user_model import UserType, User
 import random
@@ -31,6 +31,45 @@ async def create_food(
         food_type=food_data.food_type,
         count=food_data.count,
         vendor=current_user,
+    )
+
+    try:
+        await food.insert()
+        return {"message": "Food created"}
+    except Exception as e:
+        return {"message": "Food not created", "error": str(e)}
+
+
+async def create_food_admin(
+    food_data: Annotated[CreateFood, Body()],
+    vendor_id: str,                                            # selected_user: Annotated[User, Depends(get_user_by_id)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    selected_user = await get_user_by_id(vendor_id)
+    if current_user.user_type.value != UserType.ADMIN.value:
+        raise HTTPException(
+            status_code=403, detail="Only admins can create food items"
+        )
+    
+    if selected_user.user_type.value != UserType.VENDOR.value:
+        raise HTTPException(
+            status_code=403, detail="You can only create food for vendors"
+        )
+
+    # Check if the food already exists
+    existing_food = await Food.find_one(
+        {
+            "food_type": food_data.food_type,
+            "vendor.$id": selected_user.id,
+        }
+    )
+    if existing_food:
+        raise HTTPException(status_code=400, detail="Food item already exists")
+
+    food = Food(
+        food_type=food_data.food_type,
+        count=food_data.count,
+        vendor=selected_user,
     )
 
     try:
@@ -81,6 +120,55 @@ async def update_food(
         return {"message": "Food not updated", "error": str(e)}
 
 
+async def update_food_admin(
+    food_type: str,
+    food_data: Annotated[UpdateFood, Body()],
+    vendor_id: str,                                            # selected_user: Annotated[User, Depends(get_user_by_id)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    try:
+        if current_user.user_type.value != UserType.ADMIN.value:
+            raise HTTPException(
+                status_code=403, detail="Only admins can update food items"
+            )
+        
+        selected_user = await get_user_by_id(vendor_id)
+
+        if selected_user.user_type.value != UserType.VENDOR.value:
+            raise HTTPException(
+                status_code=403, detail="You can only update food for vendors"
+            )
+
+        # Check if the food exists
+        food = await Food.find_one(
+            {
+                "food_type": food_type,
+                "vendor.$id": selected_user.id,
+            }
+        )
+        if not food:
+            raise HTTPException(status_code=404, detail="Food item not found")
+
+        if food_data.food_name:
+            existing_food = await Food.find_one(
+                {
+                    "food_type": food_data.food_name,
+                    "vendor.$id": selected_user.id,
+                }
+            )
+            if existing_food:
+                raise HTTPException(status_code=400, detail="Food item already exists")
+
+            food.food_type = food_data.food_name
+        if food_data.count is not None:
+            food.count = food_data.count
+
+        await food.save()
+        return {"message": "Food updated"}
+    except Exception as e:
+        return {"message": "Food not updated", "error": str(e)}
+
+
 async def delete_food(
     food_type: str,
     current_user: User = Depends(get_current_user),
@@ -92,6 +180,34 @@ async def delete_food(
 
     # Check if the food exists
     food = await Food.find_one({"food_type": food_type, "vendor.$id": current_user.id})
+    if not food:
+        raise HTTPException(status_code=404, detail="Food item not found")
+
+    try:
+        await food.delete()
+        return {"message": "Food deleted"}
+    except Exception as e:
+        return {"message": "Food not deleted", "error": str(e)}
+
+
+async def delete_food_admin(
+    food_type: str,
+    vendor_id: str,                                            # selected_user: Annotated[User, Depends(get_user_by_id)],
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.user_type.value != UserType.ADMIN.value:
+        raise HTTPException(
+            status_code=403, detail="Only admins can delete food items"
+        )
+    
+    selected_user = await get_user_by_id(vendor_id)
+    if selected_user.user_type.value != UserType.VENDOR.value:
+        raise HTTPException(
+            status_code=403, detail="You can only delete food for vendors"
+        )
+
+    # Check if the food exists
+    food = await Food.find_one({"food_type": food_type, "vendor.$id": selected_user.id})
     if not food:
         raise HTTPException(status_code=404, detail="Food item not found")
 

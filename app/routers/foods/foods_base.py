@@ -14,6 +14,9 @@ from services.foods.food_services import (
     create_food_collection_request as create_food_collection_request_service,
     validate_collection_code as validate_collection_code_service,
     update_food as update_food_service,
+    create_food_admin as create_food_admin_service,
+    update_food_admin as update_food_admin_service,
+    delete_food_admin as delete_food_admin_service,
 )
 
 from services.users.user_services import get_current_user
@@ -82,5 +85,43 @@ async def validate_collection_code(
     return await validate_collection_code_service(
         food_type=validate_collection_code_data.food_type,
         collection_code=validate_collection_code_data.collection_code,
+        current_user=current_user,
+    )
+
+@router.post("/create_food_admin")
+async def create_food_admin(
+    food_data: Annotated[CreateFood, Body()],
+    vendor_id: str,
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    return await create_food_admin_service(
+        food_data=food_data,
+        vendor_id=vendor_id,
+        current_user=current_user,
+    )
+
+@router.put("/update_food_admin/{food_type}")
+async def update_food_admin(
+    food_type: str,
+    food_data: Annotated[UpdateFood, Body()],
+    vendor_id: str,
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    return await update_food_admin_service(
+        food_data=food_data,
+        food_type=food_type,
+        vendor_id=vendor_id,
+        current_user=current_user,
+    )
+
+@router.delete("/delete_food_admin/{food_type}")
+async def delete_food_admin(
+    food_type: str,
+    vendor_id: str,
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    return await delete_food_admin_service(
+        food_type=food_type,
+        vendor_id=vendor_id,
         current_user=current_user,
     )
