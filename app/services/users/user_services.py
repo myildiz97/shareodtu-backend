@@ -1,7 +1,17 @@
-from models.user_model.user_model import User, CreateUser, UserType, UpdateUser, RegisterVendor
+from models.user_model.user_model import (
+    User,
+    CreateUser,
+    UserType,
+    UpdateUser,
+    RegisterVendor,
+)
 from models.auth_model.auth_model import TokenData
 from models.food_model.food_model import Food
-from services.auth.auth_services import send_verification_email, send_approval_waiting_email, send_approval_email
+from services.auth.auth_services import (
+    send_verification_email,
+    send_approval_waiting_email,
+    send_approval_email,
+)
 from services.shared.shared_services import get_user_from_db, verify_password
 
 from fastapi import Depends, HTTPException, status, Form, Body, UploadFile
@@ -16,10 +26,13 @@ from passlib.context import CryptContext
 from datetime import datetime
 
 from bson.objectid import ObjectId
+import base64
+
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 
 def get_password_hash(password):
     return pwd_context.hash(password)
@@ -46,11 +59,13 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         raise credentials_exception
     return user
 
+
 async def get_user_type_by_email(email: str):
     user = await get_user_from_db(email)
     if user:
         return user.user_type
     raise HTTPException(status_code=404, detail="User not found")
+
 
 async def get_current_active_user(
     current_user: Annotated[User, Depends(get_current_user)],
@@ -172,8 +187,9 @@ async def delete_user(current_user: User = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=f"User not deleted: {str(e)}")
 
 
-
-async def register_vendor(form_data: Annotated[RegisterVendor, Form()]):
+async def register_vendor(
+    form_data: Annotated[RegisterVendor, Form()],
+):
     existing_user = await get_user_from_db(form_data.email)
     if existing_user:
         raise HTTPException(status_code=409, detail="User already exists")
@@ -194,6 +210,7 @@ async def register_vendor(form_data: Annotated[RegisterVendor, Form()]):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"User not created: {str(e)}")
 
+
 async def approve_vendor(user_id: str):
     try:
         user = await User.find_one(User.id == ObjectId(user_id))
@@ -204,16 +221,24 @@ async def approve_vendor(user_id: str):
     except Exception as e:
         return {"message": "Vendor could not approved", "error": str(e)}
 
+
 async def list_waiting_vendors():
-    vendors = await User.find(User.user_type == UserType.VENDOR.value, User.disabled == True).to_list()
+    vendors = await User.find(
+        User.user_type == UserType.VENDOR.value, User.disabled == True
+    ).to_list()
     vendor_list = []
     for vendor in vendors:
         vendor_list.append(vendor)
     return vendor_list
 
-async def save_image(file: UploadFile) -> bytes:
+
+async def get_image_content(file: UploadFile) -> bytes:
     try:
         contents = await file.read()
-        return contents
+        encoded_content = base64.b64encode(contents).decode("utf-8")
+        return encoded_content
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to upload image: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get image content: {str(e)}",
+        )
