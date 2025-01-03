@@ -2,7 +2,7 @@ from enum import Enum
 from beanie import Document
 from datetime import datetime, timedelta
 from pydantic import Field, EmailStr, BaseModel
-from fastapi import Form
+from fastapi import Form, UploadFile, HTTPException, File
 
 from typing import Optional
 
@@ -30,7 +30,23 @@ class User(Document):
     user_type: UserType = Field(UserType.DEFAULT.value, example=UserType.DEFAULT.value)
     status: Status = Field(Status.OPEN, example=Status.OPEN)
     verification_code: Optional[int] = Field(None, example=123456)
-    verification_code_expiration: Optional[datetime] = Field(None, example=datetime.now())
+    verification_code_expiration: Optional[datetime] = Field(
+        None, example=datetime.now()
+    )
+    reset_password_code: Optional[int] = Field(None, example=123456)
+    reset_password_code_expiration: Optional[datetime] = Field(
+        None, example=datetime.now()
+    )
+
+    # vendor registration request
+    vendor_address: Optional[str] = Field(
+        None, example="Informatics Institute Building, 7th Floor, Room 705"
+    )
+    facility_name: Optional[str] = Field(None, example="Kumpir Cafe")
+    vendor_phone: Optional[str] = Field(None, example="03122223344")
+    vendor_identity_no: Optional[str] = Field(None, example="12345678910")
+    image: Optional[bytes] = Field(None, example="image")
+    # vendor_id_photo:
 
 
 class CreateUser(BaseModel):
@@ -38,7 +54,6 @@ class CreateUser(BaseModel):
     email: EmailStr = Form(..., example="johndoe@example.com")
     password: str = Form(..., example="password")
     user_type: UserType = Form(UserType.DEFAULT.value, example=UserType.DEFAULT.value)
-    status: Status = Form(Status.OPEN, example=Status.OPEN)
 
 
 class UpdateUser(BaseModel):
@@ -46,3 +61,17 @@ class UpdateUser(BaseModel):
     current_password: Optional[str] = Field(None, example="password")
     new_password: Optional[str] = Field(None, example="password")
     status: Optional[Status] = Field(None, example=Status.OPEN)
+
+
+class RegisterVendor(BaseModel):
+    full_name: str = Form(..., example="John Doe")
+    email: EmailStr = Form(..., example="johndoe@example.com")
+    password: str = Form(..., example="password")
+    user_type: UserType = Form(UserType.VENDOR.value, example=UserType.VENDOR.value)
+    vendor_address: str = Form(
+        ..., example="Informatics Institute Building, 7th Floor, Room 705"
+    )
+    facility_name: str = Form(..., example="Kumpir Cafe")
+    vendor_phone: str = Form(..., example="03122223344")
+    vendor_identity_no: str = Form(..., example="12345678910")
+    image: bytes = Form(..., example="image", media_type="image/jpeg")
