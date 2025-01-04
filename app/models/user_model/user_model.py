@@ -46,7 +46,8 @@ class User(Document):
     vendor_phone: Optional[str] = Field(None, example="03122223344")
     vendor_identity_no: Optional[str] = Field(None, example="12345678910")
     image: Optional[bytes] = Field(None, example="image")
-    # vendor_id_photo:
+    reset_token: Optional[str] = Field(None, example="reset_token")
+    reset_token_expiration: Optional[datetime] = Field(None, example=datetime.now())
 
 
 class CreateUser(BaseModel):

@@ -5,7 +5,7 @@ from models.user_model.user_model import (
     UpdateUser,
     RegisterVendor,
 )
-from models.auth_model.auth_model import TokenData
+from models.auth_model.auth_model import TokenData, ResetPasswordData
 from models.food_model.food_model import Food
 from services.auth.auth_services import (
     send_verification_email,
@@ -23,7 +23,7 @@ from config.config import Settings
 import jwt
 from jwt.exceptions import InvalidTokenError
 from passlib.context import CryptContext
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from bson.objectid import ObjectId
 import base64
@@ -242,3 +242,31 @@ async def get_image_content(file: UploadFile) -> bytes:
             status_code=500,
             detail=f"Failed to get image content: {str(e)}",
         )
+
+
+async def reset_user_password(
+    data: Annotated[ResetPasswordData, Body()],
+):
+    user = await get_user_from_db(data.email)
+    if user:
+        if data.reset_token != user.reset_token:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid reset token",
+            )
+        if user.reset_token_expiration < datetime.now():
+            raise HTTPException(
+                status_code=400,
+                detail="Reset token expired! Please request a new one",
+            )
+
+        hashed_password = get_password_hash(data.password)
+        user.hashed_password = hashed_password
+        user.reset_token = None
+        user.reset_token_expiration = None
+        await user.save()
+        return {"message": "Password reset successfully"}
+    raise HTTPException(
+        status_code=404,
+        detail="User not found",
+    )
