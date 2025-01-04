@@ -237,7 +237,10 @@ async def send_reset_email(email: str):
         )
 
     # Construct the reset password link
-    base_url = "http://localhost:3000/auth/reset-password"
+    # # Localhost URL
+    # base_url = "http://localhost:3000/auth/reset-password"
+    # # Production URL
+    base_url = "https://shareodtu.vercel.app/auth/reset-password"
     reset_link = f"{base_url}/{reset_token}?email={email}"
 
     # Send the email with the reset password link
