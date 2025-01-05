@@ -6,6 +6,7 @@ from models.user_model.user_model import (
     RegisterVendor,
     UpdateUserByAdmin,
     UpdateVendorByAdmin,
+    RegisterVendorByAdmin,
 )
 from models.auth_model.auth_model import TokenData, ResetPasswordData
 from models.food_model.food_model import Food
@@ -402,4 +403,70 @@ async def update_vendor_as_admin(
         raise HTTPException(
             status_code=500,
             detail=f"Vendor not updated: {str(e)}",
+        )
+
+
+async def create_user_by_admin(
+    form_data: Annotated[CreateUser, Form()],
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.user_type != UserType.ADMIN:
+        raise HTTPException(
+            status_code=403,
+            detail="You are not authorized to access this resource",
+        )
+
+    existing_user = await get_user_from_db(form_data.email)
+    if existing_user:
+        raise HTTPException(
+            status_code=409,
+            detail="User already exists",
+        )
+
+    hashed_password = get_password_hash(form_data.password)
+    try:
+        await User.insert_one(
+            User(
+                **form_data.model_dump(),
+                hashed_password=hashed_password,
+            )
+        )
+        return {"message": "User created"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"User not created: {str(e)}",
+        )
+
+
+async def create_vendor_by_admin(
+    form_data: Annotated[RegisterVendorByAdmin, Form()],
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.user_type != UserType.ADMIN:
+        raise HTTPException(
+            status_code=403,
+            detail="You are not authorized to access this resource",
+        )
+
+    existing_user = await get_user_from_db(form_data.email)
+    if existing_user:
+        raise HTTPException(
+            status_code=409,
+            detail="User already exists",
+        )
+
+    hashed_password = get_password_hash(form_data.password)
+    try:
+        await User.insert_one(
+            User(
+                **form_data.model_dump(),
+                hashed_password=hashed_password,
+            )
+        )
+        return {"message": "User created"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"User not created: {str(e)}",
         )

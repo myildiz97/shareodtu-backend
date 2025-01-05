@@ -8,6 +8,7 @@ from models.user_model.user_model import (
     UserType,
     UpdateUserByAdmin,
     UpdateVendorByAdmin,
+    RegisterVendorByAdmin,
 )
 from services.users.user_services import (
     get_current_active_user,
@@ -24,6 +25,8 @@ from services.users.user_services import (
     delete_user_as_admin as delete_user_as_admin_service,
     update_user_as_admin as update_user_as_admin_service,
     update_vendor_as_admin as update_vendor_as_admin_service,
+    create_user_by_admin as create_user_by_admin_service,
+    create_vendor_by_admin as create_vendor_by_admin_service,
 )
 from fastapi import File, UploadFile, HTTPException
 from fastapi.responses import StreamingResponse
@@ -47,6 +50,28 @@ router = APIRouter(
 @router.get("/")
 async def list_users():
     return await User.find().sort([("updated_at", -1)]).to_list()
+
+
+@router.post("/create/user")
+async def create_user_as_admin(
+    user_data: Annotated[CreateUser, Body()],
+    current_user: User = Depends(get_current_active_user),
+):
+    return await create_user_by_admin_service(
+        user_data,
+        current_user,
+    )
+
+
+@router.post("/create/vendor")
+async def create_vendor_as_admin(
+    vendor_data: Annotated[RegisterVendorByAdmin, Body()],
+    current_user: User = Depends(get_current_active_user),
+):
+    return await create_vendor_by_admin_service(
+        vendor_data,
+        current_user,
+    )
 
 
 @router.put("/user/{user_id}")
