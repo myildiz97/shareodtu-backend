@@ -6,6 +6,8 @@ from models.user_model.user_model import (
     UpdateUser,
     RegisterVendor,
     UserType,
+    UpdateUserByAdmin,
+    UpdateVendorByAdmin,
 )
 from services.users.user_services import (
     get_current_active_user,
@@ -19,6 +21,9 @@ from services.users.user_services import (
     approve_vendor as approve_vendor_service,
     get_user_type_by_email as get_user_type_by_email_service,
     get_image_content,
+    delete_user_as_admin as delete_user_as_admin_service,
+    update_user_as_admin as update_user_as_admin_service,
+    update_vendor_as_admin as update_vendor_as_admin_service,
 )
 from fastapi import File, UploadFile, HTTPException
 from fastapi.responses import StreamingResponse
@@ -37,6 +42,48 @@ router = APIRouter(
     prefix="/users",
     tags=["Users Base"],
 )
+
+
+@router.get("/")
+async def list_users():
+    return await User.find().sort([("updated_at", -1)]).to_list()
+
+
+@router.put("/user/{user_id}")
+async def update_user_as_admin(
+    user_id: str,
+    user_data: Annotated[UpdateUserByAdmin, Body()],
+    current_user: User = Depends(get_current_active_user),
+):
+    return await update_user_as_admin_service(
+        user_id,
+        user_data,
+        current_user,
+    )
+
+
+@router.put("/vendor/{user_id}")
+async def update_vendor_as_admin(
+    user_id: str,
+    vendor_data: Annotated[UpdateVendorByAdmin, Body()],
+    current_user: User = Depends(get_current_active_user),
+):
+    return await update_vendor_as_admin_service(
+        user_id,
+        vendor_data,
+        current_user,
+    )
+
+
+@router.delete("/{user_id}")
+async def delete_user_as_admin(
+    user_id: str,
+    current_user: User = Depends(get_current_active_user),
+):
+    return await delete_user_as_admin_service(
+        user_id,
+        current_user,
+    )
 
 
 @router.get("/me")

@@ -4,6 +4,8 @@ from models.user_model.user_model import (
     UserType,
     UpdateUser,
     RegisterVendor,
+    UpdateUserByAdmin,
+    UpdateVendorByAdmin,
 )
 from models.auth_model.auth_model import TokenData, ResetPasswordData
 from models.food_model.food_model import Food
@@ -270,3 +272,134 @@ async def reset_user_password(
         status_code=404,
         detail="User not found",
     )
+
+
+async def delete_user_as_admin(
+    user_id: str,
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.user_type != UserType.ADMIN:
+        raise HTTPException(
+            status_code=403,
+            detail="You are not authorized to access this resource",
+        )
+
+    try:
+        user = await User.find_one(
+            User.id == ObjectId(user_id),
+        )
+        if not user:
+            raise HTTPException(
+                status_code=404,
+                detail="User not found",
+            )
+        if user.user_type == UserType.ADMIN:
+            raise HTTPException(
+                status_code=403,
+                detail="You are not authorized to delete this user",
+            )
+        if user.user_type == UserType.VENDOR:
+            foods = await Food.find(Food.vendor.id == user.id).to_list()
+            for food in foods:
+                await food.delete()
+        await user.delete()
+        return {"message": "User deleted"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"User not deleted: {str(e)}",
+        )
+
+
+async def update_user_as_admin(
+    user_id: str,
+    user_data: Annotated[UpdateUserByAdmin, Body()],
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.user_type != UserType.ADMIN:
+        raise HTTPException(
+            status_code=403,
+            detail="You are not authorized to access this resource",
+        )
+
+    try:
+        user = await User.find_one(
+            User.id == ObjectId(user_id),
+        )
+        if not user:
+            raise HTTPException(
+                status_code=404,
+                detail="User not found",
+            )
+
+        update_data = user_data.model_dump(
+            exclude_unset=True,
+        )
+
+        # Convert empty strings to None
+        for key, value in update_data.items():
+            if value == "":
+                update_data[key] = None
+
+        for key, value in update_data.items():
+            if value is not None:
+                setattr(user, key, value)
+
+        user.updated_at = datetime.now()
+
+        await user.save()
+
+        return {"message": "User updated"}
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"User not updated: {str(e)}",
+        )
+
+
+async def update_vendor_as_admin(
+    user_id: str,
+    vendor_data: Annotated[UpdateVendorByAdmin, Body()],
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.user_type != UserType.ADMIN:
+        raise HTTPException(
+            status_code=403,
+            detail="You are not authorized to access this resource",
+        )
+
+    try:
+        user = await User.find_one(
+            User.id == ObjectId(user_id),
+        )
+        if not user:
+            raise HTTPException(
+                status_code=404,
+                detail="User not found",
+            )
+
+        update_data = vendor_data.model_dump(
+            exclude_unset=True,
+        )
+
+        # Convert empty strings to None
+        for key, value in update_data.items():
+            if value == "":
+                update_data[key] = None
+
+        for key, value in update_data.items():
+            if value is not None:
+                setattr(user, key, value)
+
+        user.updated_at = datetime.now()
+
+        await user.save()
+
+        return {"message": "Vendor updated"}
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Vendor not updated: {str(e)}",
+        )

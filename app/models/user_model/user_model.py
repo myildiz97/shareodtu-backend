@@ -76,3 +76,21 @@ class RegisterVendor(BaseModel):
     vendor_phone: str = Form(..., example="03122223344")
     vendor_identity_no: str = Form(..., example="12345678910")
     image: bytes = Form(..., example="image", media_type="image/jpeg")
+
+
+class UpdateUserByAdmin(BaseModel):
+    full_name: Optional[str] = Field(None, example="John Doe")
+    email: Optional[EmailStr] = Field(None, example="johndoe@example.com")
+    user_type: Optional[UserType] = Field(None, example=UserType.DEFAULT.value)
+
+
+class UpdateVendorByAdmin(BaseModel):
+    full_name: Optional[str] = Field(None, example="John Doe")
+    email: Optional[EmailStr] = Field(None, example="johndoe@example.com")
+    user_type: Optional[UserType] = Field(None, example=UserType.VENDOR.value)
+    vendor_address: Optional[str] = Field(
+        None, example="Informatics Institute Building, 7th Floor, Room 705"
+    )
+    facility_name: Optional[str] = Field(None, example="Kumpir Cafe")
+    vendor_phone: Optional[str] = Field(None, example="03122223344")
+    vendor_identity_no: Optional[str] = Field(None, example="12345678910")
