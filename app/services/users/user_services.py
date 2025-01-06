@@ -14,6 +14,7 @@ from services.auth.auth_services import (
     send_verification_email,
     send_approval_waiting_email,
     send_approval_email,
+    send_rejection_email,
 )
 from services.shared.shared_services import get_user_from_db, verify_password
 
@@ -225,14 +226,14 @@ async def approve_vendor(user_id: str):
         return {"message": "Vendor could not approved", "error": str(e)}
 
 
-async def list_waiting_vendors():
-    vendors = await User.find(
-        User.user_type == UserType.VENDOR.value, User.disabled == True
-    ).to_list()
-    vendor_list = []
-    for vendor in vendors:
-        vendor_list.append(vendor)
-    return vendor_list
+async def reject_vendor(user_id: str):
+    try:
+        user = await User.find_one(User.id == ObjectId(user_id))
+        await user.delete()
+        await send_rejection_email(user.email)
+        return {"message": "Vendor rejected"}
+    except Exception as e:
+        return {"message": "Vendor could not rejected", "error": str(e)}
 
 
 async def get_image_content(file: UploadFile) -> bytes:

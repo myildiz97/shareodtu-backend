@@ -18,8 +18,8 @@ from services.users.user_services import (
     update_user as update_user_service,
     delete_user as delete_user_service,
     register_vendor as register_vendor_service,
-    list_waiting_vendors as list_waiting_vendors_service,
     approve_vendor as approve_vendor_service,
+    reject_vendor as reject_vendor_service,
     get_user_type_by_email as get_user_type_by_email_service,
     get_image_content,
     delete_user_as_admin as delete_user_as_admin_service,
@@ -161,19 +161,19 @@ async def register_vendor(
     return await register_vendor_service(form_data)
 
 
-@router.put("/approve_vendor/{user_id}")
+@router.get("/approve_vendor/{user_id}")
 async def approve_vendor(user_id: str):
     return await approve_vendor_service(user_id)
+
+
+@router.get("/reject_vendor/{user_id}")
+async def reject_vendor(user_id: str):
+    return await reject_vendor_service(user_id)
 
 
 @router.get("/vendors")
 async def list_vendors():
     return await list_vendors_service()
-
-
-@router.get("/approval_waiting_vendors")
-async def list_waiting_vendors():
-    return await list_waiting_vendors_service()
 
 
 @router.get("/{user_id}")

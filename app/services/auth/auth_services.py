@@ -297,7 +297,18 @@ async def send_approval_email(email: str):
     msg["From"] = from_addr
     msg["To"] = email
     msg["Subject"] = "Account Approved"
-    body = "Your account has been approved. You can now log in."
+
+    # Construct the login link (change this to the production URL)
+    # # Localhost URL
+    # login_link = "http://localhost:3000/auth/login"
+    # # Production URL
+    login_link = "https://shareodtu.vercel.app/auth/login"
+
+    # Email body with login link
+    body = (
+        "Your account has been approved. You can now log in.\n\n"
+        f"Click here to log in: {login_link}"
+    )
     msg.attach(MIMEText(body, "plain"))
 
     # Send the email
@@ -311,3 +322,30 @@ async def send_approval_email(email: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
     return {"message": "Approval email sent"}
+
+
+async def send_rejection_email(email: str):
+    mailUsername = Settings().MAIL_USERNAME
+    mailPassword = Settings().MAIL_PASSWORD
+
+    from_addr = Settings().MAIL_USERNAME
+
+    # Create the email message
+    msg = MIMEMultipart()
+    msg["From"] = from_addr
+    msg["To"] = email
+    msg["Subject"] = "Account Rejected"
+    body = "Your account has been rejected. Please contact the administrator for more information."
+    msg.attach(MIMEText(body, "plain"))
+
+    # Send the email
+    try:
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.starttls()
+        server.login(mailUsername, mailPassword)
+        server.sendmail(from_addr, email, msg.as_string())
+        server.quit()
+        print("Email sent successfully")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
+    return {"message": "Rejection email sent"}
