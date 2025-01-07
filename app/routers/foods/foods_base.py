@@ -88,7 +88,8 @@ async def validate_collection_code(
         current_user=current_user,
     )
 
-@router.post("/create_food_admin")
+
+@router.post("/create_food_admin/{vendor_id}")
 async def create_food_admin(
     food_data: Annotated[CreateFood, Body()],
     vendor_id: str,
@@ -100,7 +101,8 @@ async def create_food_admin(
         current_user=current_user,
     )
 
-@router.put("/update_food_admin/{food_type}")
+
+@router.put("/update_food_admin/{food_type}/{vendor_id}")
 async def update_food_admin(
     food_type: str,
     food_data: Annotated[UpdateFood, Body()],
@@ -114,7 +116,8 @@ async def update_food_admin(
         current_user=current_user,
     )
 
-@router.delete("/delete_food_admin/{food_type}")
+
+@router.delete("/delete_food_admin/{food_type}/{vendor_id}")
 async def delete_food_admin(
     food_type: str,
     vendor_id: str,
